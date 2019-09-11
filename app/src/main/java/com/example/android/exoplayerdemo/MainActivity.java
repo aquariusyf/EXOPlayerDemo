@@ -15,9 +15,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.text.Layout;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.github.rubensousa.previewseekbar.PreviewLoader;
+import com.github.rubensousa.previewseekbar.PreviewView;
+import com.github.rubensousa.previewseekbar.exoplayer.PreviewTimeBar;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
@@ -46,9 +52,11 @@ public class MainActivity extends AppCompatActivity {
     private static final String MEDIA_URL_5 = "https://firebasestorage.googleapis.com/v0/b/fir-demo-ac3eb.appspot.com/o/music%2FYoung%20For%20You%20-%20GALA.mp3?alt=media&token=f148ae10-1a2d-405a-8d42-200e9a0aa56e";
     private static final String MEDIA_URL_6 = "https://firebasestorage.googleapis.com/v0/b/fir-demo-ac3eb.appspot.com/o/music%2F%E5%91%A8%E6%9D%B0%E4%BC%A6%2B-%2B%E6%97%B6%E5%85%89%E6%9C%BA.mp3?alt=media&token=33773e8d-b5c2-4204-bc9e-173cabb58e59";
     private static final String MEDIA_URL_7 = "https://firebasestorage.googleapis.com/v0/b/fir-demo-ac3eb.appspot.com/o/music%2F%E5%91%A8%E6%9D%B0%E4%BC%A6%2B-%2B%E7%AD%89%E4%BD%A0%E4%B8%8B%E8%AF%BE%2B(with%2B%E6%9D%A8%E7%91%9E%E4%BB%A3).mp3?alt=media&token=7975a2e5-305b-4971-884a-0548f4fcb547";
+    private static final String VIDEO_URL = "https://firebasestorage.googleapis.com/v0/b/fir-demo-ac3eb.appspot.com/o/video%2Fmonster_hunter_world_goes_rock_rotten_vale_battle_theme_1080p.mp4?alt=media&token=89f91953-4e8c-4088-a813-f9e3416c6d30";
 
-    private PlayerView mPlayerView; // The exo player view
+    private PlayerView mVideoPlayerView; // The exo player view of video source
     private PlayerControlView mPlayerControlView; // The exo player control view for audio source
+    private PreviewLoader mLoader; // The preview loader
 
     /**
      * These exo views can be override by creating a custom layout file and assign it to the view
@@ -89,7 +97,8 @@ public class MainActivity extends AppCompatActivity {
         initNotificationManagerAndChannel();
         createExoPlayer();
         bindPlayerView();
-        prepareExoPlayerWithPlaylist();
+        //prepareExoPlayerWithPlaylist();
+        prepareExoPlayerWithVideoSource();
         mPlayer.setPlayWhenReady(true);
     }
 
@@ -108,14 +117,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        mPlayerView = findViewById(R.id.player_view);
+        mVideoPlayerView = findViewById(R.id.video_control_view);
         mPlayerControlView = findViewById(R.id.player_control_view);
     }
 
     /** Bind the exo player to the player view or control view */
     private void bindPlayerView() {
-        mPlayerView.setPlayer(mPlayer);
-        mPlayerControlView.setPlayer(mPlayer);
+        mVideoPlayerView.setPlayer(mPlayer);
+        //mPlayerControlView.setPlayer(mPlayer);
         mPlayerControlView.setShowTimeoutMs(0); // The control view will stay without dismiss timer
     }
 
@@ -125,7 +134,29 @@ public class MainActivity extends AppCompatActivity {
                 new DefaultDataSourceFactory(this, Util.getUserAgent(this, "EXOPlayerDemo")))
                 .createMediaSource(Uri.parse(MEDIA_URL_1));
         mPlayer.prepare(mMediaSource);
-        Log.v(LOG_TAG, "Single Media ready");
+    }
+
+    /** Create video media source */
+    private void prepareExoPlayerWithVideoSource() {
+        mMediaSource = new ProgressiveMediaSource.Factory(
+                new DefaultDataSourceFactory(this, Util.getUserAgent(this, "EXOPlayerDemo")))
+                .createMediaSource(Uri.parse(VIDEO_URL));
+        mPlayer.prepare(mMediaSource);
+        setPreviewLoader();
+    }
+
+    /** Set progress bar with preview loader */
+    private void setPreviewLoader() {
+        PreviewTimeBar previewTimeBar = findViewById(R.id.exo_progress); // Get the progress bar instance
+        ImageView previewImage = findViewById(R.id.imageView); // Get the preview image view instance
+        mLoader = new PreviewLoader() {
+            @Override
+            public void loadPreview(long currentPosition, long max) {
+                // TODO: Load the preview image
+            }
+        }; // Create preview loader
+
+        previewTimeBar.setPreviewLoader(mLoader); // Set the loader to progress bar
     }
 
     /** Create playlist and prepare exo player */
